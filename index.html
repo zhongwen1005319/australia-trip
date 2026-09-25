@@ -126,6 +126,16 @@
 var T = null;
 var current = 4;
 var liveMap = null;
+var RATE = 4.72;   // 1 AUD = 4.72 CNY（2026-09-25）
+
+// 把 "A$152" 这类金额换算成 "A$152 ≈ ¥718"
+function withCny(s) {
+  var m = /^A\$([\d,]+(?:\.\d+)?)/.exec(s || "");
+  if (!m) return s;
+  var aud = Number(m[1].replace(/,/g, ""));
+  var cny = Math.round(aud * RATE);
+  return s.replace(m[0], "A$" + m[1] + " ≈ ¥" + cny.toLocaleString("en-US"));
+}
 
 function boot() {
   T = window.TRIP;
@@ -257,7 +267,7 @@ function mealsHTML(day) {
     return '<div class="maplabel">' + title + '</div>' + list.map(function (r, i) {
       var on = pickedOf[code] === i;
       return '<div class="mcard' + (on ? " picked" : "") + '">' +
-        '<div class="mhead"><span class="mname">' + r.n + '</span><span class="mprice">' + r.p + '</span></div>' +
+        '<div class="mhead"><span class="mname">' + r.n + '</span><span class="mprice">' + withCny(r.p) + '</span></div>' +
         '<div class="mtag">' + r.t + '</div>' +
         '<div class="mwhy">' + r.w + '</div>' +
         '<div class="mact">' +
@@ -268,8 +278,8 @@ function mealsHTML(day) {
         '</div></div>';
     }).join("");
   }
-  return '<div class="meals">' + group("lunch", "午餐推荐 · 三选一") +
-    '<div style="height:14px"></div>' + group("dinner", "晚餐推荐 · 三选一") + '</div>';
+  return '<div class="meals">' + group("lunch", "午餐推荐 · 点一家加入行程") +
+    '<div style="height:14px"></div>' + group("dinner", "晚餐推荐 · 点一家加入行程") + '</div>';
 }
 
 function mapHTML(day) {
@@ -325,7 +335,7 @@ function renderView() {
   var head = '<div class="dayhead"><div class="dt">D' + day.n + ' · ' + dayLabel(day) + ' · ' + day.city +
     '</div><div class="dc">' + day.subtitle + '</div></div>';
   var cost = day.cost
-    ? '<div class="cost"><span class="k">当日花费</span><span class="v">人均 ≈ ' + day.cost + '</span></div>'
+    ? '<div class="cost"><span class="k">当日花费</span><span class="v">人均 ≈ ' + withCny(day.cost) + '</span></div>'
     : "";
   v.innerHTML = head + '<div class="body">' + itemsForDay(day).map(itemHTML).join("") + '</div>' +
     cost + mealsHTML(day) + mapHTML(day);
